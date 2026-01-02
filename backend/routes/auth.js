@@ -12,6 +12,14 @@ const validatePassword = (password) => {
     return null;
 };
 
+// User Register - Handle OPTIONS preflight
+router.options('/register', (req, res) => {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    res.status(200).send();
+});
+
 // User Register
 router.post('/register', async (req, res) => {
     try {
@@ -91,6 +99,11 @@ router.post('/register', async (req, res) => {
             message: 'Registration failed. Please try again.'
         });
     }
+});
+
+// User Register - Handle unsupported methods (except POST and OPTIONS)
+router.all('/register', (req, res) => {
+    res.status(405).json({ message: 'Method not allowed' });
 });
 
 // User Login
