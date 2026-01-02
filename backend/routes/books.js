@@ -22,7 +22,8 @@ router.get('/', async (req, res) => {
         const books = await Book.find(filter);
         res.json(books);
     } catch (err) {
-        res.status(500).json({ message: err.message });
+        console.error('Error fetching books:', err);
+        res.status(500).json({ message: 'Error fetching books' });
     }
 });
 
@@ -33,7 +34,11 @@ router.get('/:id', async (req, res) => {
         if (!book) return res.status(404).json({ message: 'Book not found' });
         res.json(book);
     } catch (err) {
-        res.status(500).json({ message: err.message });
+        console.error('Error fetching book:', err);
+        if (err.name === 'CastError') {
+            return res.status(400).json({ message: 'Invalid book ID' });
+        }
+        res.status(500).json({ message: 'Error fetching book' });
     }
 });
 
@@ -45,9 +50,11 @@ router.post('/:id/save', auth('user'), async (req, res) => {
 
         const savedBook = new SavedBook({ user: req.user.id, book: req.params.id });
         await savedBook.save();
+        console.log('Book saved:', { userId: req.user.id, bookId: req.params.id });
         res.json({ message: 'Book saved successfully' });
     } catch (err) {
-        res.status(500).json({ message: err.message });
+        console.error('Error saving book:', err);
+        res.status(500).json({ message: 'Error saving book' });
     }
 });
 
@@ -57,7 +64,8 @@ router.get('/user/saved', auth('user'), async (req, res) => {
         const savedBooks = await SavedBook.find({ user: req.user.id }).populate('book');
         res.json(savedBooks.map(sb => sb.book));
     } catch (err) {
-        res.status(500).json({ message: err.message });
+        console.error('Error fetching saved books:', err);
+        res.status(500).json({ message: 'Error fetching saved books' });
     }
 });
 
@@ -66,27 +74,41 @@ router.post('/', auth('admin'), async (req, res) => {
     try {
         const book = new Book(req.body);
         await book.save();
+        console.log('New book created:', { id: book._id, title: book.title });
         res.status(201).json(book);
     } catch (err) {
-        res.status(500).json({ message: err.message });
+        console.error('Error creating book:', err);
+        if (err.name === 'ValidationError') {
+            return res.status(400).json({ message: err.message });
+        }
+        res.status(500).json({ message: 'Error creating book' });
     }
 });
 
 router.put('/:id', auth('admin'), async (req, res) => {
     try {
         const book = await Book.findByIdAndUpdate(req.params.id, req.body, { new: true });
+        if (!book) return res.status(404).json({ message: 'Book not found' });
+        console.log('Book updated:', { id: book._id });
         res.json(book);
     } catch (err) {
-        res.status(500).json({ message: err.message });
+        console.error('Error updating book:', err);
+        if (err.name === 'CastError') {
+            return res.status(400).json({ message: 'Invalid book ID' });
+        }
+        res.status(500).json({ message: 'Error updating book' });
     }
 });
 
 router.delete('/:id', auth('admin'), async (req, res) => {
     try {
-        await Book.findByIdAndDelete(req.params.id);
+        const book = await Book.findByIdAndDelete(req.params.id);
+        if (!book) return res.status(404).json({ message: 'Book not found' });
+        console.log('Book deleted:', { id: req.params.id });
         res.json({ message: 'Book deleted' });
     } catch (err) {
-        res.status(500).json({ message: err.message });
+        console.error('Error deleting book:', err);
+        res.status(500).json({ message: 'Error deleting book' });
     }
 });
 

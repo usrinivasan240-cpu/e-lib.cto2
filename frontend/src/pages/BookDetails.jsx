@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { Bookmark, CreditCard, MapPin, Calendar, User as UserIcon } from 'lucide-react';
 import { motion } from 'framer-motion';
+import API_URL from '../api';
 
 const BookDetails = ({ user }) => {
   const { id } = useParams();
@@ -15,10 +16,10 @@ const BookDetails = ({ user }) => {
   useEffect(() => {
     const fetchBook = async () => {
       try {
-        const res = await axios.get(`http://localhost:5000/api/books/${id}`);
+        const res = await axios.get(`${API_URL}/api/books/${id}`);
         setBook(res.data);
       } catch (err) {
-        console.error(err);
+        console.error('Error fetching book:', err);
       } finally {
         setLoading(false);
       }
@@ -31,11 +32,12 @@ const BookDetails = ({ user }) => {
     setSaving(true);
     try {
       const token = localStorage.getItem('token');
-      await axios.post(`http://localhost:5000/api/books/${id}/save`, {}, {
+      await axios.post(`${API_URL}/api/books/${id}/save`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
       alert('Book saved to your bookmarks!');
     } catch (err) {
+      console.error('Error saving book:', err);
       alert(err.response?.data?.message || 'Error saving book');
     } finally {
       setSaving(false);
@@ -47,7 +49,7 @@ const BookDetails = ({ user }) => {
     setPaying(true);
     try {
       const token = localStorage.getItem('token');
-      await axios.post(`http://localhost:5000/api/transactions`, {
+      await axios.post(`${API_URL}/api/transactions`, {
         bookId: id,
         amount: 29.99 // Simulated price
       }, {

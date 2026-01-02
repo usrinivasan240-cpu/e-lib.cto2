@@ -1,16 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Trash2, User } from 'lucide-react';
+import API_URL from '../api';
 
 const AdminUsers = () => {
   const [users, setUsers] = useState([]);
 
   const fetchUsers = async () => {
     const token = localStorage.getItem('adminToken');
-    const res = await axios.get('http://localhost:5000/api/users', {
-      headers: { Authorization: `Bearer ${token}` }
-    });
-    setUsers(res.data);
+    try {
+      const res = await axios.get(`${API_URL}/api/users`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setUsers(res.data);
+    } catch (err) {
+      console.error('Error fetching users:', err);
+    }
   };
 
   useEffect(() => {
@@ -20,10 +25,15 @@ const AdminUsers = () => {
   const handleDelete = async (id) => {
     if (!window.confirm('Delete this user account?')) return;
     const token = localStorage.getItem('adminToken');
-    await axios.delete(`http://localhost:5000/api/users/${id}`, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
-    fetchUsers();
+    try {
+      await axios.delete(`${API_URL}/api/users/${id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      fetchUsers();
+    } catch (err) {
+      console.error('Error deleting user:', err);
+      alert('Error deleting user');
+    }
   };
 
   return (

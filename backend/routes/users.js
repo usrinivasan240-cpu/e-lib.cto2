@@ -9,17 +9,24 @@ router.get('/', auth('admin'), async (req, res) => {
         const users = await User.find().select('-password');
         res.json(users);
     } catch (err) {
-        res.status(500).json({ message: err.message });
+        console.error('Error fetching users:', err);
+        res.status(500).json({ message: 'Error fetching users' });
     }
 });
 
 // Admin: Delete user account
 router.delete('/:id', auth('admin'), async (req, res) => {
     try {
-        await User.findByIdAndDelete(req.params.id);
+        const user = await User.findByIdAndDelete(req.params.id);
+        if (!user) return res.status(404).json({ message: 'User not found' });
+        console.log('User deleted:', { id: req.params.id });
         res.json({ message: 'User deleted' });
     } catch (err) {
-        res.status(500).json({ message: err.message });
+        console.error('Error deleting user:', err);
+        if (err.name === 'CastError') {
+            return res.status(400).json({ message: 'Invalid user ID' });
+        }
+        res.status(500).json({ message: 'Error deleting user' });
     }
 });
 

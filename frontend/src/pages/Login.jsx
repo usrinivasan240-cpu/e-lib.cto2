@@ -2,22 +2,36 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { motion } from 'framer-motion';
+import API_URL from '../api';
 
 const Login = ({ setUser }) => {
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError('');
+    setIsLoading(true);
+
     try {
-      const res = await axios.post('http://localhost:5000/api/auth/login', formData);
+      const res = await axios.post(`${API_URL}/api/auth/login`, formData);
       localStorage.setItem('token', res.data.token);
       localStorage.setItem('user', JSON.stringify(res.data.user));
       setUser(res.data.user);
       navigate('/');
     } catch (err) {
-      setError(err.response?.data?.message || 'Login failed');
+      console.error('Login error:', err);
+      if (err.response?.data?.message) {
+        setError(err.response.data.message);
+      } else if (err.message) {
+        setError('Login failed. Please check your connection and try again.');
+      } else {
+        setError('An unexpected error occurred. Please try again.');
+      }
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -51,8 +65,12 @@ const Login = ({ setUser }) => {
               onChange={(e) => setFormData({ ...formData, password: e.target.value })}
             />
           </div>
-          <button type="submit" className="w-full gold-bg-gradient text-black font-bold py-3 rounded-lg hover:opacity-90 transition-all">
-            Login
+          <button 
+            type="submit" 
+            disabled={isLoading}
+            className="w-full gold-bg-gradient text-black font-bold py-3 rounded-lg hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isLoading ? 'Logging In...' : 'Login'}
           </button>
         </form>
         <p className="mt-6 text-center text-sm opacity-60">

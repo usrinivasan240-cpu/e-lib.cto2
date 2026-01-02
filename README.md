@@ -52,13 +52,13 @@ The `vercel.json` file configures:
 
 1. **Root Directory**: When deploying to Vercel, set the Root Directory to the project root (not to `frontend/`)
 
-2. **Environment Variables**: Add your MongoDB URI as `MONGODB_URI` in Vercel environment variables
+2. **Environment Variables**: Add these to Vercel environment variables:
+   - `VITE_API_URL`: Your deployed backend API URL (e.g., `https://your-backend.vercel.app`)
+   - For the backend deployment (separate), set `MONGODB_URI` with your MongoDB Atlas connection string
 
-3. **Backend API**: The backend needs to be deployed separately (e.g., Railway, Render, or Vercel Serverless Functions) and the API base URL in the frontend should be updated accordingly
+3. **Backend API**: The backend needs to be deployed separately (e.g., Railway, Render, or Vercel Serverless Functions). Make sure to set the `MONGODB_URI` environment variable for the backend with your MongoDB Atlas connection string (including the database name "elibrary").
 
-4. **Current API URL**: The frontend is configured to use `http://localhost:5000` for development. Update this in:
-   - `frontend/src/pages/Home.jsx`
-   - Other API calls throughout the frontend
+4. **Frontend Configuration**: Update `VITE_API_URL` in your deployment to point to your deployed backend URL
 
 ### Backend Deployment Options
 
@@ -73,7 +73,7 @@ The backend can be deployed to:
 
 ### Prerequisites
 - Node.js (v18 or higher)
-- MongoDB (local or cloud instance)
+- MongoDB Atlas cloud database (recommended)
 
 ### Setup
 
@@ -91,25 +91,54 @@ cd frontend
 npm install
 ```
 
-4. Create a `.env` file in the `backend/` directory:
-```
-MONGODB_URI=mongodb://localhost:27017/e-library
+4. Create a `.env` file in the `backend/` directory (copy from `.env.example`):
+```bash
+# Required: MongoDB Atlas connection string
+MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/elibrary
+
+# Optional: JWT secret for token signing (defaults to 'secret' in dev)
+JWT_SECRET=your-secret-key-here
+
+# Optional: Server port (defaults to 5000)
 PORT=5000
 ```
 
-5. Start the backend server:
+**Important:** The `MONGODB_URI` must include the database name "elibrary" at the end of the connection string.
+
+5. Create a `.env` file in the `frontend/` directory (copy from `.env.example`):
+```bash
+# API base URL (for local development)
+VITE_API_URL=http://localhost:5000
+```
+
+6. Start the backend server:
 ```bash
 cd backend
 node server.js
 ```
 
-6. Start the frontend development server:
+7. Start the frontend development server:
 ```bash
 cd frontend
 npm run dev
 ```
 
-7. Open http://localhost:5173 in your browser
+8. Open http://localhost:5173 in your browser
+
+### Environment Variables
+
+#### Backend (.env)
+- `MONGODB_URI` (required): MongoDB Atlas connection string with database name "elibrary"
+- `JWT_SECRET` (optional): Secret key for JWT token signing
+- `PORT` (optional): Server port (default: 5000)
+
+#### Frontend (.env)
+- `VITE_API_URL` (optional): Backend API URL (default: http://localhost:5000)
+
+### Password Requirements
+When registering a new user, passwords must:
+- Be at least 8 characters long
+- Contain at least one number or special character (e.g., !@#$%^&*)
 
 ## Features
 
