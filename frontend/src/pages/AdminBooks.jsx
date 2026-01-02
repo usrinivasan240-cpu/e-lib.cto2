@@ -1,19 +1,24 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Plus, Trash2, Edit2, X } from 'lucide-react';
+import API_URL from '../api';
 
 const AdminBooks = () => {
   const [books, setBooks] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentBook, setCurrentBook] = useState(null);
   const [formData, setFormData] = useState({
-    title: '', author: '', category: '', description: '', 
+    title: '', author: '', category: '', description: '',
     publicationYear: '', libraryLocation: '', coverImage: ''
   });
 
   const fetchBooks = async () => {
-    const res = await axios.get('http://localhost:5000/api/books');
-    setBooks(res.data);
+    try {
+      const res = await axios.get(`${API_URL}/api/books`);
+      setBooks(res.data);
+    } catch (err) {
+      console.error('Error fetching books:', err);
+    }
   };
 
   useEffect(() => {
@@ -25,11 +30,11 @@ const AdminBooks = () => {
     const token = localStorage.getItem('adminToken');
     try {
       if (currentBook) {
-        await axios.put(`http://localhost:5000/api/books/${currentBook._id}`, formData, {
+        await axios.put(`${API_URL}/api/books/${currentBook._id}`, formData, {
           headers: { Authorization: `Bearer ${token}` }
         });
       } else {
-        await axios.post('http://localhost:5000/api/books', formData, {
+        await axios.post(`${API_URL}/api/books`, formData, {
           headers: { Authorization: `Bearer ${token}` }
         });
       }
@@ -38,6 +43,7 @@ const AdminBooks = () => {
       setFormData({ title: '', author: '', category: '', description: '', publicationYear: '', libraryLocation: '', coverImage: '' });
       setCurrentBook(null);
     } catch (err) {
+      console.error('Error saving book:', err);
       alert('Error saving book');
     }
   };
@@ -45,10 +51,15 @@ const AdminBooks = () => {
   const handleDelete = async (id) => {
     if (!window.confirm('Are you sure?')) return;
     const token = localStorage.getItem('adminToken');
-    await axios.delete(`http://localhost:5000/api/books/${id}`, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
-    fetchBooks();
+    try {
+      await axios.delete(`${API_URL}/api/books/${id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      fetchBooks();
+    } catch (err) {
+      console.error('Error deleting book:', err);
+      alert('Error deleting book');
+    }
   };
 
   const openEdit = (book) => {

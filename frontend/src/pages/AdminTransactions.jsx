@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { DollarSign, Clock } from 'lucide-react';
+import API_URL from '../api';
 
 const AdminTransactions = () => {
   const [transactions, setTransactions] = useState([]);
@@ -8,10 +9,14 @@ const AdminTransactions = () => {
   useEffect(() => {
     const fetchTransactions = async () => {
       const token = localStorage.getItem('adminToken');
-      const res = await axios.get('http://localhost:5000/api/transactions', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setTransactions(res.data);
+      try {
+        const res = await axios.get(`${API_URL}/api/transactions`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setTransactions(res.data);
+      } catch (err) {
+        console.error('Error fetching transactions:', err);
+      }
     };
     fetchTransactions();
   }, []);

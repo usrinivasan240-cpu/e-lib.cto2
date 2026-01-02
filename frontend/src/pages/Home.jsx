@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Search as SearchIcon } from 'lucide-react';
 import BookCard from '../components/BookCard';
+import API_URL from '../api';
 
 const Home = () => {
   const [books, setBooks] = useState([]);
@@ -11,10 +12,10 @@ const Home = () => {
   const fetchBooks = async (query = '') => {
     setLoading(true);
     try {
-      const res = await axios.get(`http://localhost:5000/api/books?query=${query}`);
+      const res = await axios.get(`${API_URL}/api/books?query=${query}`);
       setBooks(res.data);
     } catch (err) {
-      console.error(err);
+      console.error('Error fetching books:', err);
     } finally {
       setLoading(false);
     }

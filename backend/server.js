@@ -14,65 +14,105 @@ app.use(express.json());
 const MONGODB_URI = process.env.MONGODB_URI;
 const PORT = process.env.PORT || 5000;
 
-mongoose.connect(MONGODB_URI)
+// Validate environment variables
+if (!MONGODB_URI) {
+    console.error('ERROR: MONGODB_URI environment variable is missing or empty.');
+    console.error('Please set MONGODB_URI in your environment variables.');
+    process.exit(1);
+}
+
+// MongoDB connection options for better stability
+const mongooseOptions = {
+    serverSelectionTimeoutMS: 5000,
+    socketTimeoutMS: 45000,
+    maxPoolSize: 50,
+    minPoolSize: 5,
+    retryWrites: true,
+    retryReads: true,
+};
+
+// Connect to MongoDB
+mongoose.connect(MONGODB_URI, mongooseOptions)
     .then(async () => {
-        console.log('MongoDB connected');
+        console.log('MongoDB connected successfully to database:', mongoose.connection.name);
         
         // Auto-create default admin
-        const adminExists = await Admin.findOne({ email: 'watson777@gmail.com' });
-        if (!adminExists) {
-            const admin = new Admin({
-                email: 'watson777@gmail.com',
-                password: 'watson777',
-                role: 'admin'
-            });
-            await admin.save();
-            console.log('Default admin created');
+        try {
+            const adminExists = await Admin.findOne({ email: 'watson777@gmail.com' });
+            if (!adminExists) {
+                const admin = new Admin({
+                    email: 'watson777@gmail.com',
+                    password: 'watson777',
+                    role: 'admin'
+                });
+                await admin.save();
+                console.log('Default admin created');
+            }
+        } catch (err) {
+            console.error('Error creating default admin:', err);
         }
 
         // Seed some books if empty
-        const bookCount = await Book.countDocuments();
-        if (bookCount === 0) {
-            const sampleBooks = [
-                {
-                    title: "The Great Gatsby",
-                    author: "F. Scott Fitzgerald",
-                    category: "Classic",
-                    description: "A story of wealth, love, and the American Dream in the 1920s.",
-                    publicationYear: 1925,
-                    availability: "Available",
-                    libraryLocation: "Shelf A1",
-                    coverImage: "https://images.unsplash.com/photo-1543005814-14b24e17a332?auto=format&fit=crop&w=800&q=80"
-                },
-                {
-                    title: "Atomic Habits",
-                    author: "James Clear",
-                    category: "Self-Help",
-                    description: "An easy and proven way to build good habits and break bad ones.",
-                    publicationYear: 2018,
-                    availability: "Available",
-                    libraryLocation: "Shelf B2",
-                    coverImage: "https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&fit=crop&w=800&q=80"
-                },
-                {
-                    title: "The Alchemist",
-                    author: "Paulo Coelho",
-                    category: "Fiction",
-                    description: "A journey of self-discovery and following one's dreams.",
-                    publicationYear: 1988,
-                    availability: "Available",
-                    libraryLocation: "Shelf C3",
-                    coverImage: "https://images.unsplash.com/photo-1589829085413-56de8ae18c73?auto=format&fit=crop&w=800&q=80"
-                }
-            ];
-            await Book.insertMany(sampleBooks);
-            console.log('Sample books seeded');
+        try {
+            const bookCount = await Book.countDocuments();
+            if (bookCount === 0) {
+                const sampleBooks = [
+                    {
+                        title: "The Great Gatsby",
+                        author: "F. Scott Fitzgerald",
+                        category: "Classic",
+                        description: "A story of wealth, love, and the American Dream in the 1920s.",
+                        publicationYear: 1925,
+                        availability: "Available",
+                        libraryLocation: "Shelf A1",
+                        coverImage: "https://images.unsplash.com/photo-1543005814-14b24e17a332?auto=format&fit=crop&w=800&q=80"
+                    },
+                    {
+                        title: "Atomic Habits",
+                        author: "James Clear",
+                        category: "Self-Help",
+                        description: "An easy and proven way to build good habits and break bad ones.",
+                        publicationYear: 2018,
+                        availability: "Available",
+                        libraryLocation: "Shelf B2",
+                        coverImage: "https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&fit=crop&w=800&q=80"
+                    },
+                    {
+                        title: "The Alchemist",
+                        author: "Paulo Coelho",
+                        category: "Fiction",
+                        description: "A journey of self-discovery and following one's dreams.",
+                        publicationYear: 1988,
+                        availability: "Available",
+                        libraryLocation: "Shelf C3",
+                        coverImage: "https://images.unsplash.com/photo-1589829085413-56de8ae18c73?auto=format&fit=crop&w=800&q=80"
+                    }
+                ];
+                await Book.insertMany(sampleBooks);
+                console.log('Sample books seeded');
+            }
+        } catch (err) {
+            console.error('Error seeding books:', err);
         }
     })
     .catch(err => {
-        console.error('MongoDB connection error:', err);
+        console.error('MongoDB connection error:', err.message);
+        console.error('Please check your MONGODB_URI environment variable.');
         process.exit(1);
     });
+
+// Handle MongoDB connection errors after initial connection
+mongoose.connection.on('error', (err) => {
+    console.error('MongoDB connection error:', err);
+});
+
+mongoose.connection.on('disconnected', () => {
+    console.warn('MongoDB disconnected');
+});
+
+mongoose.connection.on('reconnected', () => {
+    console.log('MongoDB reconnected');
+});
 
 // Routes
 app.use('/api/auth', require('./routes/auth'));

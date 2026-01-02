@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import BookCard from '../components/BookCard';
+import API_URL from '../api';
 
 const SavedBooks = () => {
   const [books, setBooks] = useState([]);
@@ -10,12 +11,12 @@ const SavedBooks = () => {
     const fetchSavedBooks = async () => {
       try {
         const token = localStorage.getItem('token');
-        const res = await axios.get('http://localhost:5000/api/books/user/saved', {
+        const res = await axios.get(`${API_URL}/api/books/user/saved`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         setBooks(res.data);
       } catch (err) {
-        console.error(err);
+        console.error('Error fetching saved books:', err);
       } finally {
         setLoading(false);
       }

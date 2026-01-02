@@ -4,20 +4,91 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const Admin = require('../models/Admin');
 
+// Password validation helper
+const validatePassword = (password) => {
+    if (!password || password.length < 8) {
+        return 'Password must be at least 8 characters long';
+    }
+    // Check for at least one number or special character
+    const hasNumberOrSpecial = /[0-9!@#$%^&*(),.?":{}|<>]/.test(password);
+    if (!hasNumberOrSpecial) {
+        return 'Password must contain at least one number or special character';
+    }
+    return null;
+};
+
 // User Register
 router.post('/register', async (req, res) => {
     try {
         const { name, email, password } = req.body;
-        let user = await User.findOne({ email });
-        if (user) return res.status(400).json({ message: 'User already exists' });
 
+        // Validate required fields
+        if (!name || !email || !password) {
+            return res.status(400).json({ 
+                message: 'All fields are required: name, email, and password' 
+            });
+        }
+
+        // Validate email format
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            return res.status(400).json({ message: 'Please enter a valid email address' });
+        }
+
+        // Validate password
+        const passwordError = validatePassword(password);
+        if (passwordError) {
+            return res.status(400).json({ message: passwordError });
+        }
+
+        // Check if email already exists
+        let user = await User.findOne({ email });
+        if (user) {
+            return res.status(400).json({ message: 'Email already registered' });
+        }
+
+        // Create new user
         user = new User({ name, email, password });
         await user.save();
+        console.log('New user registered:', { id: user._id, email: user.email });
 
-        const token = jwt.sign({ id: user._id, role: 'user' }, process.env.JWT_SECRET || 'secret', { expiresIn: '1d' });
-        res.json({ token, user: { id: user._id, name: user.name, email: user.email, role: 'user' } });
+        // Generate token
+        const token = jwt.sign(
+            { id: user._id, role: 'user' }, 
+            process.env.JWT_SECRET || 'secret', 
+            { expiresIn: '1d' }
+        );
+
+        res.json({ 
+            token, 
+            user: { 
+                id: user._id, 
+                name: user.name, 
+                email: user.email, 
+                role: 'user' 
+            } 
+        });
     } catch (err) {
-        res.status(500).json({ message: err.message });
+        console.error('Registration error:', err);
+        
+        // Handle duplicate key error
+        if (err.code === 11000) {
+            return res.status(400).json({ 
+                message: 'Email already registered' 
+            });
+        }
+        
+        // Handle validation errors
+        if (err.name === 'ValidationError') {
+            const errors = Object.values(err.errors).map(e => e.message);
+            return res.status(400).json({ 
+                message: errors.join(', ') 
+            });
+        }
+
+        res.status(500).json({ 
+            message: 'Registration failed. Please try again.' 
+        });
     }
 });
 
@@ -25,15 +96,50 @@ router.post('/register', async (req, res) => {
 router.post('/login', async (req, res) => {
     try {
         const { email, password } = req.body;
-        const user = await User.findOne({ email });
-        if (!user || !(await user.comparePassword(password))) {
-            return res.status(400).json({ message: 'Invalid credentials' });
+
+        // Validate required fields
+        if (!email || !password) {
+            return res.status(400).json({ 
+                message: 'Email and password are required' 
+            });
         }
 
-        const token = jwt.sign({ id: user._id, role: 'user' }, process.env.JWT_SECRET || 'secret', { expiresIn: '1d' });
-        res.json({ token, user: { id: user._id, name: user.name, email: user.email, role: 'user' } });
+        const user = await User.findOne({ email });
+        if (!user) {
+            return res.status(400).json({ 
+                message: 'Invalid email or password' 
+            });
+        }
+
+        const isPasswordValid = await user.comparePassword(password);
+        if (!isPasswordValid) {
+            return res.status(400).json({ 
+                message: 'Invalid email or password' 
+            });
+        }
+
+        const token = jwt.sign(
+            { id: user._id, role: 'user' }, 
+            process.env.JWT_SECRET || 'secret', 
+            { expiresIn: '1d' }
+        );
+        
+        console.log('User logged in:', { id: user._id, email: user.email });
+        
+        res.json({ 
+            token, 
+            user: { 
+                id: user._id, 
+                name: user.name, 
+                email: user.email, 
+                role: 'user' 
+            } 
+        });
     } catch (err) {
-        res.status(500).json({ message: err.message });
+        console.error('Login error:', err);
+        res.status(500).json({ 
+            message: 'Login failed. Please try again.' 
+        });
     }
 });
 
@@ -41,15 +147,49 @@ router.post('/login', async (req, res) => {
 router.post('/admin/login', async (req, res) => {
     try {
         const { email, password } = req.body;
-        const admin = await Admin.findOne({ email });
-        if (!admin || !(await admin.comparePassword(password))) {
-            return res.status(400).json({ message: 'Invalid credentials' });
+
+        // Validate required fields
+        if (!email || !password) {
+            return res.status(400).json({ 
+                message: 'Email and password are required' 
+            });
         }
 
-        const token = jwt.sign({ id: admin._id, role: 'admin' }, process.env.JWT_SECRET || 'secret', { expiresIn: '1d' });
-        res.json({ token, admin: { id: admin._id, email: admin.email, role: 'admin' } });
+        const admin = await Admin.findOne({ email });
+        if (!admin) {
+            return res.status(400).json({ 
+                message: 'Invalid email or password' 
+            });
+        }
+
+        const isPasswordValid = await admin.comparePassword(password);
+        if (!isPasswordValid) {
+            return res.status(400).json({ 
+                message: 'Invalid email or password' 
+            });
+        }
+
+        const token = jwt.sign(
+            { id: admin._id, role: 'admin' }, 
+            process.env.JWT_SECRET || 'secret', 
+            { expiresIn: '1d' }
+        );
+        
+        console.log('Admin logged in:', { id: admin._id, email: admin.email });
+        
+        res.json({ 
+            token, 
+            admin: { 
+                id: admin._id, 
+                email: admin.email, 
+                role: 'admin' 
+            } 
+        });
     } catch (err) {
-        res.status(500).json({ message: err.message });
+        console.error('Admin login error:', err);
+        res.status(500).json({ 
+            message: 'Login failed. Please try again.' 
+        });
     }
 });
 
