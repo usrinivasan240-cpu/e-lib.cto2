@@ -52,13 +52,9 @@ The `vercel.json` file configures:
 
 1. **Root Directory**: When deploying to Vercel, set the Root Directory to the project root (not to `frontend/`)
 
-2. **Environment Variables**: Add these to Vercel environment variables:
-   - `VITE_API_URL`: Your deployed backend API URL (e.g., `https://your-backend.vercel.app`)
-   - For the backend deployment (separate), set `MONGODB_URI` with your MongoDB Atlas connection string
+2. **Same-origin API**: The frontend calls the backend using relative paths (for example, `/api/auth/register`). Deploy the frontend and backend behind the same origin (same domain) so these requests resolve correctly.
 
-3. **Backend API**: The backend needs to be deployed separately (e.g., Railway, Render, or Vercel Serverless Functions). Make sure to set the `MONGODB_URI` environment variable for the backend with your MongoDB Atlas connection string (including the database name "elibrary").
-
-4. **Frontend Configuration**: Update `VITE_API_URL` in your deployment to point to your deployed backend URL
+3. **Backend Environment Variables**: Set `MONGODB_URI` with your MongoDB Atlas connection string (including the database name "elibrary").
 
 ### Backend Deployment Options
 
@@ -105,11 +101,7 @@ PORT=5000
 
 **Important:** The `MONGODB_URI` must include the database name "elibrary" at the end of the connection string.
 
-5. Create a `.env` file in the `frontend/` directory (copy from `.env.example`):
-```bash
-# API base URL (for local development)
-VITE_API_URL=http://localhost:5000
-```
+5. (Optional) Create a `.env` file in the `frontend/` directory (copy from `.env.example`). The frontend uses relative API paths by default, so most setups don't need any frontend env vars.
 
 6. Start the backend server:
 ```bash
@@ -123,7 +115,7 @@ cd frontend
 npm run dev
 ```
 
-8. Open http://localhost:5173 in your browser
+8. Open the dev server URL printed by Vite in your browser
 
 ### Environment Variables
 
@@ -133,12 +125,11 @@ npm run dev
 - `PORT` (optional): Server port (default: 5000)
 
 #### Frontend (.env)
-- `VITE_API_URL` (optional): Backend API URL (default: http://localhost:5000)
+- `VITE_API_URL` (optional): API base path (must be relative, e.g. `/my-subpath`). Leave unset for the default same-origin `/api/...` routes.
 
 ### Password Requirements
 When registering a new user, passwords must:
-- Be at least 8 characters long
-- Contain at least one number or special character (e.g., !@#$%^&*)
+- Be at least 6 characters long
 
 ## Features
 

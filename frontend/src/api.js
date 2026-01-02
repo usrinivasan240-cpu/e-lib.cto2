@@ -1,3 +1,7 @@
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const apiBaseFromEnv = import.meta.env.VITE_API_URL;
+
+const API_URL = typeof apiBaseFromEnv === 'string' && apiBaseFromEnv.startsWith('/')
+  ? apiBaseFromEnv.replace(/\/$/, '')
+  : '';
 
 export default API_URL;

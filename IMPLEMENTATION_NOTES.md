@@ -29,11 +29,10 @@ This document outlines the fixes implemented to resolve user registration, authe
 
 **Registration Enhancements:**
 - Added password validation:
-  - Minimum 8 characters
-  - Must contain at least one number or special character
+  - Minimum 6 characters
 - Added email format validation
-- Changed duplicate email message from "User already exists" to "Email already registered"
-- Added validation for required fields (name, email, password)
+- Added validation for required fields (fullName, email, password)
+- Duplicate email returns "Email already registered"
 - Enhanced error handling:
   - Duplicate key errors (MongoDB code 11000)
   - Validation errors (extracts all validation messages)
@@ -83,9 +82,9 @@ This document outlines the fixes implemented to resolve user registration, authe
 ### 1. API Configuration (`frontend/src/api.js`)
 
 **New File:**
-- Created centralized API URL configuration
-- Uses `VITE_API_URL` environment variable
-- Falls back to `http://localhost:5000` for local development
+- Created centralized API configuration
+- Uses relative API paths by default (for example, `/api/auth/register`)
+- Optional: `VITE_API_URL` can set a *relative* base path if the frontend is deployed under a sub-path
 
 ### 2. Registration Page (`frontend/src/pages/Register.jsx`)
 
@@ -127,7 +126,7 @@ This document outlines the fixes implemented to resolve user registration, authe
 - `AdminUsers.jsx`: Fetching and deleting users
 - `AdminTransactions.jsx`: Fetching transactions
 
-All now use the centralized `API_URL` from `api.js` instead of hardcoded localhost:5000.
+All now use the centralized `API_URL` from `api.js` (which resolves to relative `/api/...` endpoints by default).
 
 ### 6. Environment Configuration
 
@@ -162,8 +161,7 @@ All now use the centralized `API_URL` from `api.js` instead of hardcoded localho
    - Hashing done in model pre-save hook
 
 2. **Password Validation:**
-   - Minimum 8 characters
-   - Must contain number or special character
+   - Minimum 6 characters
    - Validated before saving to database
 
 3. **Error Messages:**
@@ -256,13 +254,13 @@ All now use the centralized `API_URL` from `api.js` instead of hardcoded localho
 - This is expected behavior when trying to register with an existing email
 - Use login instead for existing users
 
-**"Password must be at least 8 characters long"**
-- Solution: Create a stronger password with 8+ characters and a number or special character
+**"Password must be at least 6 characters long"**
+- Solution: Use a password with at least 6 characters
 
 **"Connection failed" in frontend**
-- Check VITE_API_URL is set correctly
-- Verify backend is running
-- Check browser console for errors
+- Verify the backend API is reachable under the same origin at `/api/...`
+- For local development, configure the Vite dev server to proxy `/api` to your backend
+- Check browser console/network tab for errors
 
 **MongoDB connection errors**
 - Verify connection string format
