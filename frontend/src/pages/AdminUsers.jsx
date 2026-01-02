@@ -47,7 +47,7 @@ const AdminUsers = () => {
                 <User size={24} />
               </div>
               <div>
-                <p className="font-bold">{user.name}</p>
+                <p className="font-bold">{user.fullName}</p>
                 <p className="text-sm opacity-60">{user.email}</p>
               </div>
             </div>

@@ -44,7 +44,7 @@ router.post('/', auth('user'), async (req, res) => {
 router.get('/', auth('admin'), async (req, res) => {
     try {
         const transactions = await Transaction.find()
-            .populate('user', 'name email')
+            .populate('user', 'fullName email')
             .populate('book', 'title')
             .sort({ transactionDate: -1 });
         res.json(transactions);

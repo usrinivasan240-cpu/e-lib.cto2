@@ -33,7 +33,7 @@ const AdminTransactions = () => {
               </div>
               <div>
                 <p className="font-bold">Payment for "{tx.book?.title || 'Unknown'}"</p>
-                <p className="text-sm opacity-60">User: {tx.user?.name} ({tx.user?.email})</p>
+                <p className="text-sm opacity-60">User: {tx.user?.fullName} ({tx.user?.email})</p>
               </div>
             </div>
             <div className="flex flex-col items-end">

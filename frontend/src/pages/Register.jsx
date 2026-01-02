@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import API_URL from '../api';
 
 const Register = ({ setUser }) => {
-  const [formData, setFormData] = useState({ name: '', email: '', password: '' });
+  const [formData, setFormData] = useState({ fullName: '', email: '', password: '' });
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
@@ -47,12 +47,12 @@ const Register = ({ setUser }) => {
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
             <label className="block text-sm opacity-70 mb-2">Full Name</label>
-            <input 
-              type="text" 
+            <input
+              type="text"
               required
               className="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-3 focus:border-primary outline-none transition-all"
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              value={formData.fullName}
+              onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
             />
           </div>
           <div>

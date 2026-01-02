@@ -17,7 +17,7 @@ const Navbar = ({ user, admin, onLogout, onAdminLogout }) => {
             <>
               <Link to="/saved" className="hover:text-primary transition-colors">Saved</Link>
               <div className="flex items-center gap-4 ml-4">
-                <span className="text-sm opacity-70">Hello, {user.name}</span>
+                <span className="text-sm opacity-70">Hello, {user.fullName}</span>
                 <button onClick={onLogout} className="text-red-400 hover:text-red-500 transition-colors">
                   <LogOut size={20} />
                 </button>
