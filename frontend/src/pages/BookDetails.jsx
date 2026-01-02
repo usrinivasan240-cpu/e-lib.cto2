@@ -57,7 +57,7 @@ const BookDetails = ({ user }) => {
       });
       alert('Payment successful! Book issued.');
       // Refresh book data
-      const res = await axios.get(`http://localhost:5000/api/books/${id}`);
+      const res = await axios.get(`${API_URL}/api/books/${id}`);
       setBook(res.data);
     } catch (err) {
       alert(err.response?.data?.message || 'Error processing payment');

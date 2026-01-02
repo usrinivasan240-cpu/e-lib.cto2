@@ -6,13 +6,8 @@ const Admin = require('../models/Admin');
 
 // Password validation helper
 const validatePassword = (password) => {
-    if (!password || password.length < 8) {
-        return 'Password must be at least 8 characters long';
-    }
-    // Check for at least one number or special character
-    const hasNumberOrSpecial = /[0-9!@#$%^&*(),.?":{}|<>]/.test(password);
-    if (!hasNumberOrSpecial) {
-        return 'Password must contain at least one number or special character';
+    if (!password || password.length < 6) {
+        return 'Password must be at least 6 characters long';
     }
     return null;
 };
@@ -20,74 +15,80 @@ const validatePassword = (password) => {
 // User Register
 router.post('/register', async (req, res) => {
     try {
-        const { name, email, password } = req.body;
+        const { fullName, email, password } = req.body;
 
         // Validate required fields
-        if (!name || !email || !password) {
-            return res.status(400).json({ 
-                message: 'All fields are required: name, email, and password' 
+        if (!fullName || !email || !password) {
+            return res.status(400).json({
+                message: 'All fields are required: fullName, email, and password'
             });
         }
 
+        // Trim whitespace from all fields
+        const trimmedFullName = fullName.trim();
+        const trimmedEmail = email.trim();
+        const trimmedPassword = password.trim();
+
         // Validate email format
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(email)) {
+        if (!emailRegex.test(trimmedEmail)) {
             return res.status(400).json({ message: 'Please enter a valid email address' });
         }
 
         // Validate password
-        const passwordError = validatePassword(password);
+        const passwordError = validatePassword(trimmedPassword);
         if (passwordError) {
             return res.status(400).json({ message: passwordError });
         }
 
         // Check if email already exists
-        let user = await User.findOne({ email });
+        let user = await User.findOne({ email: trimmedEmail });
         if (user) {
             return res.status(400).json({ message: 'Email already registered' });
         }
 
         // Create new user
-        user = new User({ name, email, password });
+        user = new User({ fullName: trimmedFullName, email: trimmedEmail, password: trimmedPassword });
         await user.save();
         console.log('New user registered:', { id: user._id, email: user.email });
 
         // Generate token
         const token = jwt.sign(
-            { id: user._id, role: 'user' }, 
-            process.env.JWT_SECRET || 'secret', 
+            { id: user._id, role: 'user' },
+            process.env.JWT_SECRET || 'secret',
             { expiresIn: '1d' }
         );
 
-        res.json({ 
-            token, 
-            user: { 
-                id: user._id, 
-                name: user.name, 
-                email: user.email, 
-                role: 'user' 
-            } 
+        res.json({
+            message: 'Registration successful',
+            token,
+            user: {
+                id: user._id,
+                fullName: user.fullName,
+                email: user.email,
+                role: 'user'
+            }
         });
     } catch (err) {
         console.error('Registration error:', err);
-        
+
         // Handle duplicate key error
         if (err.code === 11000) {
-            return res.status(400).json({ 
-                message: 'Email already registered' 
-            });
-        }
-        
-        // Handle validation errors
-        if (err.name === 'ValidationError') {
-            const errors = Object.values(err.errors).map(e => e.message);
-            return res.status(400).json({ 
-                message: errors.join(', ') 
+            return res.status(400).json({
+                message: 'Email already registered'
             });
         }
 
-        res.status(500).json({ 
-            message: 'Registration failed. Please try again.' 
+        // Handle validation errors
+        if (err.name === 'ValidationError') {
+            const errors = Object.values(err.errors).map(e => e.message);
+            return res.status(400).json({
+                message: errors.join(', ')
+            });
+        }
+
+        res.status(500).json({
+            message: 'Registration failed. Please try again.'
         });
     }
 });
@@ -119,21 +120,21 @@ router.post('/login', async (req, res) => {
         }
 
         const token = jwt.sign(
-            { id: user._id, role: 'user' }, 
-            process.env.JWT_SECRET || 'secret', 
+            { id: user._id, role: 'user' },
+            process.env.JWT_SECRET || 'secret',
             { expiresIn: '1d' }
         );
-        
+
         console.log('User logged in:', { id: user._id, email: user.email });
-        
-        res.json({ 
-            token, 
-            user: { 
-                id: user._id, 
-                name: user.name, 
-                email: user.email, 
-                role: 'user' 
-            } 
+
+        res.json({
+            token,
+            user: {
+                id: user._id,
+                fullName: user.fullName,
+                email: user.email,
+                role: 'user'
+            }
         });
     } catch (err) {
         console.error('Login error:', err);
